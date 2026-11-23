@@ -1,0 +1,72 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{tabularx}
+
+\title{AforoSeguro\\Informe de práctica}
+\author{Zambrano Parraga Luis Mario}
+\date{23/11/2026}
+
+\begin{document}
+\maketitle
+
+\section{Escenarios ejecutados}
+Java 21. Un coordinador y tres puertas en la misma computadora, con aforo 10.
+Las referencias de la tabla corresponden a transcripciones de consola.
+E0 corresponde al control de una sesión supervisada y quedó fuera de este ensayo local.
+
+\small
+\begin{tabularx}{\textwidth}{@{} l l X @{}}
+\textbf{Escenario} & \textbf{Evidencia} & \textbf{Observación} \\
+E1 & \texttt{E1.txt} & Entró una persona por cada puerta y salió una por P2. Las tres consultas devolvieron 2/10. \\
+E2 & \texttt{E2.txt} & La undécima entrada fue rechazada por aforo completo. El token incorrecto también fue rechazado y quedó registrado. \\
+E3 & \texttt{E3.txt} & En modo normal se permitieron 10 entradas, se rechazaron 20 y el contador quedó en 10. En modo inseguro se permitieron 30, se rechazaron 0 y el contador quedó en 30. Hubo cero errores de comunicación. \\
+E4 & \texttt{E4.txt} & Al detener P3, el coordinador la marcó como caída. Al reiniciarla, volvió a marcarla como activa. \\
+E5 & \texttt{E5.txt} & Con el coordinador detenido, P1 indicó que la entrada quedó sin confirmar y pidió mantener el paso cerrado. \\
+E6 & \texttt{E6.txt} & Se combinaron 432 eventos en el registro ordenado. \\
+\end{tabularx}
+\normalsize
+
+\section{Causalidad}
+En \texttt{logs/orden\_total.log} se pueden seguir dos solicitudes por su UUID.
+Para el latido de P3 con prefijo \texttt{13159384}, P3 registró el envío
+con marca 1 y el coordinador registró la recepción con marca 2.
+Para la entrada de P1 con prefijo \texttt{0e830852}, P1 registró el envío
+con marca 12 y el coordinador registró la recepción con marca 13.
+
+\newpage
+
+\section{Preguntas de análisis}
+\begin{enumerate}
+\item \textbf{Concurrencia.} En E3, varios hilos comprobaron el aforo antes
+de que venciera la pausa de 50 ms. Cada uno pudo incrementar el contador
+después de haber observado espacio libre. En modo normal, la exclusión
+mutua abarca tanto la comprobación como la actualización. Los hilos
+pueden atender conexiones en paralelo y esperan su turno para modificar
+el contador.
+
+\item \textbf{Coordinador inaccesible.} En E5, P1 mantuvo el paso cerrado.
+Ante una interrupción de la comunicación, la puerta sacrifica la
+disponibilidad de las entradas para preservar la consistencia del aforo,
+que es el aspecto relevante de CAP en este escenario. El público debe
+esperar y la administración debe restablecer la coordinación antes de
+autorizar el acceso.
+
+\item \textbf{Punto único de fallo.} Una elección como Bully puede designar
+un nuevo coordinador. El sucesor necesita un contador replicado y un
+mecanismo para distinguir las operaciones ya aplicadas. Dos líderes
+activos a la vez podrían aceptar entradas a partir de estados
+diferentes. En este ensayo, reiniciar el coordinador puso el contador
+en cero, aunque las bitácoras quedaron en disco.
+
+\item \textbf{Latencia y latidos.} El intervalo de 2 segundos y el umbral
+de 6 segundos permiten detectar la ausencia de varios latidos. Esto
+toma en cuenta la falacia de que la latencia es cero. Con 7 segundos
+de latencia, el coordinador podría marcar como caída una puerta sana.
+El cliente también tiene un límite de espera de 3 segundos para la
+respuesta, por lo que una solicitud podría quedar sin confirmar incluso
+si el coordinador la aplica más tarde.
+\end{enumerate}
+
+\end{document}
