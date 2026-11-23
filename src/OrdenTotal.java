@@ -20,27 +20,3 @@ public class OrdenTotal {
     }
 }
 
-
-
-/*
-*Sin Internet*
-mkdir AP-U1-Apellido-Nombre; cd AP-U1-Apellido-Nombre
-git init
-git config user.name "Nombre Apellido"
-git config user.email "correo@uteq.edu.ec"
-git add .
-git commit -m "Inicio AP-U1 - codigo de sesion: XXXX"
-# ...trabajan y repiten git add / git commit varias veces
-git log --oneline   # muestra el historial local
-*
-*
-* *Una vez conectado a Internet*
-# después de crear el repositorio vacío en GitHub (sin README)
-git remote add origin https://github.com/usuario/AP-U1-Apellido-Nombre.git
-git branch -M main
-git push -u origin main
-*
-*
-* KD55-TB
-* 662D-M6
- */
